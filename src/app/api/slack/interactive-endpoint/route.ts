@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
         trigger_id: trigger_id,
         dialog: {
             title: 'Send User Message',
-            callback_id: 'send_user_message_dialog', // Update callback ID here
+            callback_id: 'send_user_message_dialog', 
             elements: [
                 {
                     type: 'select',
