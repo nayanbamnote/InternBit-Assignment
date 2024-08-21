@@ -1,39 +1,34 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    if (req.method === 'POST') {
-        const { submission, callback_id } = req.body;
+export async function POST(req: NextRequest) {
+    const { submission, callback_id } = await req.json();
 
-        if (callback_id === 'send_user_message_dialog') {
-            const { user, message } = submission;
+    if (callback_id === 'send_user_message_dialog') {
+        const { user, message } = submission;
 
-            try {
-                const response = await fetch('https://slack.com/api/chat.postMessage', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${process.env.SLACK_BOT_TOKEN}`
-                    },
-                    body: JSON.stringify({
-                        channel: user,
-                        text: message
-                    })
-                });
+        try {
+            const response = await fetch('https://slack.com/api/chat.postMessage', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${process.env.SLACK_BOT_TOKEN}`
+                },
+                body: JSON.stringify({
+                    channel: user,
+                    text: message
+                })
+            });
 
-                if (response.ok) {
-                    res.status(200).end();
-                } else {
-                    res.status(response.status).end();
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                res.status(500).end();
+            if (response.ok) {
+                return NextResponse.json({}, { status: 200 });
+            } else {
+                return NextResponse.json({}, { status: response.status });
             }
-        } else {
-            res.status(400).end('Invalid callback ID');
+        } catch (error) {
+            console.error('Error:', error);
+            return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
         }
     } else {
-        res.setHeader('Allow', ['POST']);
-        res.status(405).end(`Method ${req.method} Not Allowed`);
+        return NextResponse.json({ error: 'Invalid callback ID' }, { status: 400 });
     }
 }
